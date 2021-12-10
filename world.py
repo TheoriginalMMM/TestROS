@@ -2,16 +2,17 @@
 # Olivier Georgeon, 2021.
 # This code is used to teach Developmental AI.
 # from turtlesim_enacter import TurtleSimEnacter # requires ROS
+import copy
 import random
 
 import resources
-from turtlepy_enacter import TurtlePyEnacter
+
 
 # from Agent5 import Agent5
 # from OsoyooCarEnacter import OsoyooCarEnacter
 
 ########## Class agent fournite au début
-from turtlesim_enacter import TurtleSimEnacter
+
 
 
 class Agent:
@@ -239,7 +240,6 @@ class Agent3:
         else:
             self.anticipation_memory[self._action] = outcome
 
-
 class Agent4:
     def __init__(self, _hedonist_table):
         """ Creating our agent """
@@ -255,10 +255,10 @@ class Agent4:
         # Un mémoire pour bien anticiper ses actions
         # Rempli de cette maniere par défaut et ca sera mis a jour a chaque fois
         self.anticipation_memory = {}
-        self.anticipation_memory[0] = 0
-        self.anticipation_memory[1] = 0
-        self.anticipation_memory[2] = 0
-        self.possible_actions = [0, 1, 2]
+        self.possible_actions = [i for i in range(len(hedonist_table))]
+        for i in range(len(self.possible_actions)):
+            self.anticipation_memory[i] = 0
+
         self.Interactions = None
 
     def action(self, outcome):
@@ -271,56 +271,62 @@ class Agent4:
                   ", valence: " + str(self.hedonist_table[self._action][outcome]) + ")")
 
         """ Computing the next action to enact """
-        # On stocke ce qu'on a fait dans les etapes d'avant
-        if self.compute_ennui == 1:
-            self.Interactions = resources.Interaction(self._action, outcome, self.hedonist_table[self._action][outcome])
+        if self.compute_ennui == 0:
+            self.Interactions = resources.Interaction.create_or_retrieve(self._action, outcome, self.hedonist_table[self._action][self.anticipation_memory[self._action]])
 
         # MAJ DE SES ANTICIPATIONS
-        self.MAJ_anticipation(self.anticipated_outcome == outcome, outcome)
+        self.maj_anticipation_memory()
+        # self.MAJ_anticipation(self.anticipated_outcome == outcome, outcome)
+
         # TODO: Implement the agent's decision mechanism
         self.set_action_valeur_positif()
-        #self.check_ennui()
+        # self.check_ennui()
         # TODO: Implement the agent's anticipation mechanism
         self.anticipated_outcome = self.anticipation_memory[self._action]
 
         self.compute_ennui += 1
-        self.Interactions.create_or_retrieve(self._action, outcome, self.hedonist_table[self._action][outcome])
+        # if 2 <= self.compute_ennui:
+        #    self.Interactions.create_or_retrieve(self._action, outcome, self.hedonist_table[self._action][outcome])
         return self._action
 
-    # def check_ennui(self):
-    #
-    #     if self.compute_ennui == 0:
-    #         pass
-    #     elif self.compute_ennui % self.seuil_enui == 0:
-    #         self._action = self.change_action(self._action)
+    def check_ennui(self):
+        if self.compute_ennui == 0:
+            pass
+        elif self.compute_ennui % self.seuil_enui == 0:
+            self._action = self.change_action(self._action)
 
     def set_action_valeur_positif(self):
         founded = False
-        if self.Interactions.interaction_list[-1].valence < 0:
-            for i in self.possible_actions:
-                if i != self._action:
+        actions = copy.deepcopy(self.possible_actions)
+        if self.Interactions is not None:
+            if self.Interactions.interaction_list[-1].valence < 0:
+                del actions[self.Interactions.interaction_list[-1].action]
+            for i in actions:
+                if not founded:
                     if 0 < self.hedonist_table[i][self.anticipation_memory[i]]:
                         self._action = i
                         founded = True
-                    if not founded:
-                        self._action = self.change_action(self, self.action)
+                if not founded:
+                    self._action = self.choose_action(actions)
+            else:
+                pass
         else:
-            pass
+            self._action = actions[random.randrange(len(actions))]
 
     def change_action(self, action):
-        new_action = random.randint(0, 2)
-        while (new_action == action):
-            new_action = random.randint(0, 2)
+
+        new_action = self.possible_actions[random.randrange(len(self.possible_actions))]
+        while new_action == action:
+            new_action = self.possible_actions[random.randrange(len(self.possible_actions))]
         return new_action
 
-    def MAJ_anticipation(self, bool, outcome):
-        if bool:
-            pass
-        # On change la valeur de l'anticipation si c'est faux
-        else:
-            self.anticipation_memory[self._action] = outcome
+    def choose_action(self, actions):
+        new_action = random.randrange(len(actions))
+        return actions[new_action]
 
-
+    def maj_anticipation_memory(self):
+        for i in self.Interactions.interaction_list:
+            self.anticipation_memory[i.action]=i.outcome
 class Environment1:
     """ In Environment 1, action 0 yields outcome 0, action 1 yields outcome 1 """
 
@@ -361,13 +367,13 @@ class Environment3:
 # hedonist_table = [[-1, 1], [-1, 1]]
 hedonist_table = [[-1, 1], [1, -1]]
 # TODO Choose an agent
-a = Agent2(hedonist_table)
+a = Agent4(hedonist_table)
 # a = Agent5(hedonist_table)
 # TODO Choose an environment
 # e = Environment1()
 # e = Environment1()
-# e = Environment3()
-e = TurtleSimEnacter()
+e = Environment3()
+#e = TurtleSimEnacter()
 # e = TurtlePyEnacter()
 # e = OsoyooCarEnacter()
 
