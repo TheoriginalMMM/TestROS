@@ -43,7 +43,9 @@ class Interaction:
 if __name__ == '__main__':
     """ demonstrate the usage of Interaction.create_or_retrieve() """
     interaction00 = Interaction.create_or_retrieve(0, 0)  # Create
+    print((interaction00.interaction_list[-1]).valence)
     interaction01 = Interaction.create_or_retrieve(0, 1)  # Create
+
     interaction10 = Interaction.create_or_retrieve(1, 0)  # Create
     interaction11 = Interaction.create_or_retrieve(1, 1)  # Create
     interaction00 = Interaction.create_or_retrieve(0, 0)  # Retrieve

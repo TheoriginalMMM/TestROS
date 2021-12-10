@@ -6,6 +6,7 @@ import turtle
 #
 # Inspired by Turtle Python tutorial:
 #   * https://www.javatpoint.com/python-turtle-programming
+import world
 
 SCREEN_WIDTH = 400
 SCREEN_HEIGHT = 300
@@ -23,7 +24,7 @@ class TurtlePyEnacter:
         pen.speed(0)
         pen.pencolor("white")
         pen.hideturtle()
-        pen.setpos(-SCREEN_WIDTH/2, -SCREEN_HEIGHT/2)
+        pen.setpos(-SCREEN_WIDTH / 2, -SCREEN_HEIGHT / 2)
         pen.fillcolor("white")
         pen.begin_fill()
         for i in range(2):
@@ -58,17 +59,17 @@ class TurtlePyEnacter:
 
             # Bump on screen edge and return outcome 1
             (screen_x, screen_y) = self.screen.screensize()
-            if self.turtle.xcor() < -SCREEN_WIDTH/2:
-                self.turtle.goto(-SCREEN_WIDTH/2, self.turtle.ycor())
+            if self.turtle.xcor() < -SCREEN_WIDTH / 2:
+                self.turtle.goto(-SCREEN_WIDTH / 2, self.turtle.ycor())
                 _outcome = 1
-            if self.turtle.xcor() > SCREEN_WIDTH/2:
-                self.turtle.goto(SCREEN_WIDTH/2, self.turtle.ycor())
+            if self.turtle.xcor() > SCREEN_WIDTH / 2:
+                self.turtle.goto(SCREEN_WIDTH / 2, self.turtle.ycor())
                 _outcome = 1
-            if self.turtle.ycor() < -SCREEN_HEIGHT/2:
-                self.turtle.goto(self.turtle.xcor(), -SCREEN_HEIGHT/2)
+            if self.turtle.ycor() < -SCREEN_HEIGHT / 2:
+                self.turtle.goto(self.turtle.xcor(), -SCREEN_HEIGHT / 2)
                 _outcome = 1
-            if self.turtle.ycor() > SCREEN_HEIGHT/2:
-                self.turtle.goto(self.turtle.xcor(), SCREEN_HEIGHT/2)
+            if self.turtle.ycor() > SCREEN_HEIGHT / 2:
+                self.turtle.goto(self.turtle.xcor(), SCREEN_HEIGHT / 2)
                 _outcome = 1
 
             if _outcome == 0:
@@ -82,7 +83,8 @@ class TurtlePyEnacter:
 if __name__ == '__main__':
     """ Main """
     x = TurtlePyEnacter()
-    interaction_step = 0 # Prevents triggering a new interaction before the previous is finished
+    interaction_step = 0  # Prevents triggering a new interaction before the previous is finished
+    hedonist_table = [[-1, 1, 1], [1, 0, -1], [1, -1, -1]]
 
     def k1():
         global interaction_step
