@@ -14,7 +14,6 @@ import resources
 ########## Class agent fournite au début
 
 
-
 class Agent:
     def __init__(self, _hedonist_table):
         """ Creating our agent """
@@ -240,6 +239,7 @@ class Agent3:
         else:
             self.anticipation_memory[self._action] = outcome
 
+
 class Agent4:
     def __init__(self, _hedonist_table):
         """ Creating our agent """
@@ -250,16 +250,15 @@ class Agent4:
         self.anticipated_outcome = 0
         # compteur pour mésurer son ennui et pour qu'il change d'action
         self.compute_ennui = 0
-        # Aprés combien de temps il commence a s'annyer
-        self.seuil_enui = 4
-        # Un mémoire pour bien anticiper ses actions
         # Rempli de cette maniere par défaut et ca sera mis a jour a chaque fois
         self.anticipation_memory = {}
         self.possible_actions = [i for i in range(len(hedonist_table))]
+
         for i in range(len(self.possible_actions)):
             self.anticipation_memory[i] = 0
 
-        self.Interactions = None
+        self.contexte = None
+        self.memory = {}
 
     def action(self, outcome):
         """ tracing the previous cycle """
@@ -271,22 +270,29 @@ class Agent4:
                   ", valence: " + str(self.hedonist_table[self._action][outcome]) + ")")
 
         """ Computing the next action to enact """
-        if self.compute_ennui == 0:
-            self.Interactions = resources.Interaction.create_or_retrieve(self._action, outcome, self.hedonist_table[self._action][self.anticipation_memory[self._action]])
+        self.contexte = resources.Interaction.create_or_retrieve(self._action, outcome,
+                                                                 self.hedonist_table[self._action][
+                                                                     outcome])
+        print(list(self.contexte.interaction_list))
 
-        # MAJ DE SES ANTICIPATIONS
-        self.maj_anticipation_memory()
-        # self.MAJ_anticipation(self.anticipated_outcome == outcome, outcome)
+        if len(self.contexte.interaction_list) >= 2:
+
+            it = self.contexte.interaction_list[-1]
+            itm1 = self.contexte.interaction_list[-2]
+            new_key = (itm1.action, it.action)
+            print(f"memory new key : {new_key}")
+            self.memory[new_key] = outcome
 
         # TODO: Implement the agent's decision mechanism
         self.set_action_valeur_positif()
         # self.check_ennui()
         # TODO: Implement the agent's anticipation mechanism
-        self.anticipated_outcome = self.anticipation_memory[self._action]
+        #self.anticipated_outcome = self.anticipation_memory[self._action]
 
         self.compute_ennui += 1
         # if 2 <= self.compute_ennui:
         #    self.Interactions.create_or_retrieve(self._action, outcome, self.hedonist_table[self._action][outcome])
+        print(f"MEMORY={self.memory}")
         return self._action
 
     def check_ennui(self):
@@ -296,22 +302,38 @@ class Agent4:
             self._action = self.change_action(self._action)
 
     def set_action_valeur_positif(self):
-        founded = False
-        actions = copy.deepcopy(self.possible_actions)
-        if self.Interactions is not None:
-            if self.Interactions.interaction_list[-1].valence < 0:
-                del actions[self.Interactions.interaction_list[-1].action]
-            for i in actions:
-                if not founded:
-                    if 0 < self.hedonist_table[i][self.anticipation_memory[i]]:
-                        self._action = i
-                        founded = True
-                if not founded:
-                    self._action = self.choose_action(actions)
-            else:
-                pass
+        Founded = False
+        ## SI on a pas encore choisi deux fois
+        if len(self.contexte.interaction_list) < 2:
+            # print("PAS ENCORE 2 ACTIONS")
+            possible_actions = copy.deepcopy(self.possible_actions)
+            for e in self.contexte.interaction_list:
+                if e.valence < 0:
+                    del possible_actions[e.action]
+
+            self._action = self.choose_action(possible_actions)
+            self.anticipated_outcome = 0
         else:
-            self._action = actions[random.randrange(len(actions))]
+            for i in self.possible_actions:
+                if not Founded:
+                    if (self.contexte.interaction_list[-1].action, i) in self.memory:
+                        if 0 < self.hedonist_table[i][self.memory[(self.contexte.interaction_list[-1].action, i)]]:
+                            self._action = i
+                            self.anticipated_outcome = self.memory[(self.contexte.interaction_list[-1].action, i)]
+                            # print("ON TROUVE UNE BONNE ACTION")
+                            Founded = True
+
+            if not Founded:
+                possible_actions = copy.deepcopy(self.possible_actions)
+                if self.contexte.interaction_list[-1].valence < 0:
+                    del possible_actions[self.contexte.interaction_list[-1].action]
+
+                self._action = self.choose_action(possible_actions)
+                if (self.contexte.interaction_list[-1].action, self._action) in self.memory:
+                    self.anticipated_outcome = self.memory[
+                        (self.contexte.interaction_list[-1].action, self._action)]
+                else:
+                    self.anticipated_outcome = 0
 
     def change_action(self, action):
 
@@ -326,7 +348,9 @@ class Agent4:
 
     def maj_anticipation_memory(self):
         for i in self.Interactions.interaction_list:
-            self.anticipation_memory[i.action]=i.outcome
+            self.anticipation_memory[i.action] = i.outcome
+
+
 class Environment1:
     """ In Environment 1, action 0 yields outcome 0, action 1 yields outcome 1 """
 
@@ -373,7 +397,7 @@ a = Agent4(hedonist_table)
 # e = Environment1()
 # e = Environment1()
 e = Environment3()
-#e = TurtleSimEnacter()
+# e = TurtleSimEnacter()
 # e = TurtlePyEnacter()
 # e = OsoyooCarEnacter()
 

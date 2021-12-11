@@ -45,7 +45,8 @@ if __name__ == '__main__':
     interaction00 = Interaction.create_or_retrieve(0, 0)  # Create
     interaction00.create_or_retrieve(0, 1)
 
-    print((interaction00.interaction_list))
+    print((len(interaction00.interaction_list)))
+    print((interaction00.interaction_list[-2]))
     interaction01 = Interaction.create_or_retrieve(0, 1)  # Create
 
     interaction10 = Interaction.create_or_retrieve(1, 0)  # Create
